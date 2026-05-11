@@ -6,6 +6,34 @@
 const BOT_TOKEN = '8625264726:AAFHxTjUp_N0iupAGLcq6hBsCfVnMIc2bO4';
 const CHAT_ID   = '904669192';
 
+/* ---- JSONBIN CONFIG (shared database) --------------------- */
+const JSONBIN_KEY         = 'YOUR_JSONBIN_KEY';       /* ← вставь ключ */
+const JSONBIN_PRODUCTS_ID = 'YOUR_PRODUCTS_BIN_ID';  /* ← вставь ID бина */
+const JSONBIN_ORDERS_ID   = 'YOUR_ORDERS_BIN_ID';    /* ← вставь ID бина */
+
+async function cloudFetch(binId) {
+  if (JSONBIN_KEY === 'YOUR_JSONBIN_KEY') return null;
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_KEY },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.record;
+  } catch { return null; }
+}
+
+async function cloudSave(binId, value) {
+  if (JSONBIN_KEY === 'YOUR_JSONBIN_KEY') return;
+  try {
+    await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_KEY },
+      body: JSON.stringify(value),
+    });
+  } catch {}
+}
+
 /* ---- PRODUCT DATA ----------------------------------------- */
 const DEFAULT_PRODUCTS = [
   {
@@ -132,6 +160,7 @@ function getProducts() {
 
 function saveProducts(products) {
   localStorage.setItem('greenroot_products', JSON.stringify(products));
+  cloudSave(JSONBIN_PRODUCTS_ID, products);
 }
 
 function createProduct({ name, shortDesc = '', description = '', usage = '', price = '', stock = null, emoji = '' }) {
@@ -640,6 +669,7 @@ function saveOrder({ name, phone, comment, items, total }) {
     orders.unshift({ ts: new Date().toISOString(), name, phone, comment, items, total });
     if (orders.length > 50) orders.length = 50;
     localStorage.setItem('greenroot_orders', JSON.stringify(orders));
+    cloudSave(JSONBIN_ORDERS_ID, orders);
   } catch (e) {
     console.warn('Could not save order:', e);
   }
@@ -756,8 +786,15 @@ function setActiveNav() {
 
 /* ---- PAGE INIT -------------------------------------------- */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   setActiveNav();
+
+  /* Sync products from cloud on page load */
+  const cloudProducts = await cloudFetch(JSONBIN_PRODUCTS_ID);
+  if (Array.isArray(cloudProducts) && cloudProducts.length > 0) {
+    localStorage.setItem('greenroot_products', JSON.stringify(cloudProducts));
+  }
+
   initCart();
   initCheckoutModal();
   if (document.getElementById('catalog-grid'))   renderCatalog();
