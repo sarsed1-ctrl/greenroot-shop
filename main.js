@@ -6,29 +6,24 @@
 const BOT_TOKEN = '8625264726:AAFHxTjUp_N0iupAGLcq6hBsCfVnMIc2bO4';
 const CHAT_ID   = '904669192';
 
-/* ---- JSONBIN CONFIG (shared database) --------------------- */
-const JSONBIN_KEY         = 'YOUR_JSONBIN_KEY';       /* ← вставь ключ */
-const JSONBIN_PRODUCTS_ID = 'YOUR_PRODUCTS_BIN_ID';  /* ← вставь ID бина */
-const JSONBIN_ORDERS_ID   = 'YOUR_ORDERS_BIN_ID';    /* ← вставь ID бина */
+/* ---- GLITCH BOT URL (shared database) --------------------- */
+const GLITCH_URL = 'YOUR_GLITCH_URL'; /* ← например: https://greenroot-bot.glitch.me */
 
-async function cloudFetch(binId) {
-  if (JSONBIN_KEY === 'YOUR_JSONBIN_KEY') return null;
+async function cloudFetch(path) {
+  if (GLITCH_URL === 'YOUR_GLITCH_URL') return null;
   try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-      headers: { 'X-Master-Key': JSONBIN_KEY },
-    });
+    const res = await fetch(`${GLITCH_URL}${path}`);
     if (!res.ok) return null;
-    const data = await res.json();
-    return data.record;
+    return await res.json();
   } catch { return null; }
 }
 
-async function cloudSave(binId, value) {
-  if (JSONBIN_KEY === 'YOUR_JSONBIN_KEY') return;
+async function cloudSave(path, value) {
+  if (GLITCH_URL === 'YOUR_GLITCH_URL') return;
   try {
-    await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_KEY },
+    await fetch(`${GLITCH_URL}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(value),
     });
   } catch {}
@@ -160,7 +155,7 @@ function getProducts() {
 
 function saveProducts(products) {
   localStorage.setItem('greenroot_products', JSON.stringify(products));
-  cloudSave(JSONBIN_PRODUCTS_ID, products);
+  cloudSave('/products-save', products);
 }
 
 function createProduct({ name, shortDesc = '', description = '', usage = '', price = '', stock = null, emoji = '' }) {
@@ -669,7 +664,7 @@ function saveOrder({ name, phone, comment, items, total }) {
     orders.unshift({ ts: new Date().toISOString(), name, phone, comment, items, total });
     if (orders.length > 50) orders.length = 50;
     localStorage.setItem('greenroot_orders', JSON.stringify(orders));
-    cloudSave(JSONBIN_ORDERS_ID, orders);
+    cloudSave('/orders', { name, phone, comment, items, total });
   } catch (e) {
     console.warn('Could not save order:', e);
   }
@@ -789,8 +784,8 @@ function setActiveNav() {
 document.addEventListener('DOMContentLoaded', async () => {
   setActiveNav();
 
-  /* Sync products from cloud on page load */
-  const cloudProducts = await cloudFetch(JSONBIN_PRODUCTS_ID);
+  /* Sync products from Glitch bot on page load */
+  const cloudProducts = await cloudFetch('/products');
   if (Array.isArray(cloudProducts) && cloudProducts.length > 0) {
     localStorage.setItem('greenroot_products', JSON.stringify(cloudProducts));
   }
