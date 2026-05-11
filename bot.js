@@ -123,14 +123,8 @@ async function handleMessage(text, state) {
   }
 
   if (text==='🛒 Заказы'||/^\/orders$/i.test(text)) {
-    const orders = getOrders();
-    if (!orders.length) { await send('🛒 Заказов пока нет.', MAIN_KB); return; }
-    const lines = orders.slice(0,10).map((o,i)=>{
-      const d=new Date(o.ts);
-      const dt=`${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-      return `${i+1}. ${dt} — ${o.name} (${o.phone})\n   ${o.items.map(it=>`${it.name}×${it.qty}`).join(', ')}\n   Итого: ${o.total}`;
-    }).join('\n\n');
-    await send(`🛒 Последние ${Math.min(orders.length,10)} заказов:\n\n`+lines, MAIN_KB); return;
+    await send('🛒 Заказы приходят напрямую в этот чат как сообщения — прокрути вверх чтобы увидеть их.\n\n📌 Каждый новый заказ появляется здесь сразу после оформления.', MAIN_KB);
+    return;
   }
 
   if (text==='💰 Цены'||/^\/prices$/i.test(text)) {
