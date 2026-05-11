@@ -6,28 +6,18 @@
 const BOT_TOKEN = '8625264726:AAFHxTjUp_N0iupAGLcq6hBsCfVnMIc2bO4';
 const CHAT_ID   = '904669192';
 
-/* ---- GLITCH BOT URL (shared database) --------------------- */
-const GLITCH_URL = 'YOUR_GLITCH_URL'; /* ← например: https://greenroot-bot.glitch.me */
+/* ---- GITHUB RAW (shared products from repo) --------------- */
+const PRODUCTS_URL = 'https://raw.githubusercontent.com/sarsed1-ctrl/greenroot-shop/main/data/products.json';
 
-async function cloudFetch(path) {
-  if (GLITCH_URL === 'YOUR_GLITCH_URL') return null;
+async function cloudFetch() {
   try {
-    const res = await fetch(`${GLITCH_URL}${path}`);
+    const res = await fetch(`${PRODUCTS_URL}?_=${Date.now()}`); /* cache-bust */
     if (!res.ok) return null;
     return await res.json();
   } catch { return null; }
 }
 
-async function cloudSave(path, value) {
-  if (GLITCH_URL === 'YOUR_GLITCH_URL') return;
-  try {
-    await fetch(`${GLITCH_URL}${path}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(value),
-    });
-  } catch {}
-}
+function cloudSave() { /* данные обновляются через Telegram-бот */ }
 
 /* ---- PRODUCT DATA ----------------------------------------- */
 const DEFAULT_PRODUCTS = [
@@ -155,7 +145,7 @@ function getProducts() {
 
 function saveProducts(products) {
   localStorage.setItem('greenroot_products', JSON.stringify(products));
-  cloudSave('/products-save', products);
+  cloudSave();
 }
 
 function createProduct({ name, shortDesc = '', description = '', usage = '', price = '', stock = null, emoji = '' }) {
@@ -664,7 +654,7 @@ function saveOrder({ name, phone, comment, items, total }) {
     orders.unshift({ ts: new Date().toISOString(), name, phone, comment, items, total });
     if (orders.length > 50) orders.length = 50;
     localStorage.setItem('greenroot_orders', JSON.stringify(orders));
-    cloudSave('/orders', { name, phone, comment, items, total });
+    /* заказы уже отправлены в Telegram */
   } catch (e) {
     console.warn('Could not save order:', e);
   }
@@ -784,8 +774,8 @@ function setActiveNav() {
 document.addEventListener('DOMContentLoaded', async () => {
   setActiveNav();
 
-  /* Sync products from Glitch bot on page load */
-  const cloudProducts = await cloudFetch('/products');
+  /* Load products from GitHub repo */
+  const cloudProducts = await cloudFetch();
   if (Array.isArray(cloudProducts) && cloudProducts.length > 0) {
     localStorage.setItem('greenroot_products', JSON.stringify(cloudProducts));
   }
