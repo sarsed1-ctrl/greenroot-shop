@@ -6,8 +6,30 @@
 const BOT_TOKEN = '8625264726:AAFHxTjUp_N0iupAGLcq6hBsCfVnMIc2bO4';
 const CHAT_ID   = '904669192';
 
-/* ---- GITHUB RAW (shared products from repo) --------------- */
+/* ---- GITHUB CONFIG ---------------------------------------- */
 const PRODUCTS_URL = 'https://raw.githubusercontent.com/sarsed1-ctrl/greenroot-shop/main/data/products.json';
+const GH_REPO      = 'sarsed1-ctrl/greenroot-shop';
+const GH_ORDERS    = 'data/orders.json';
+
+/* Токен хранится в localStorage (вводится в admin.html один раз) */
+function getGhToken() { return localStorage.getItem('gr_gh_token') || ''; }
+
+async function saveOrderToGitHub(order) {
+  const token = getGhToken();
+  if (!token) return;
+  try {
+    const headers = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' };
+    const fileRes  = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${GH_ORDERS}`, { headers });
+    const file     = await fileRes.json();
+    const orders   = JSON.parse(atob(file.content.replace(/\n/g,'')));
+    orders.unshift(order);
+    if (orders.length > 50) orders.length = 50;
+    await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${GH_ORDERS}`, {
+      method: 'PUT', headers,
+      body: JSON.stringify({ message: 'new order [skip ci]', content: btoa(unescape(encodeURIComponent(JSON.stringify(orders, null, 2)))), sha: file.sha }),
+    });
+  } catch(e) { console.warn('GitHub orders sync failed:', e); }
+}
 
 async function cloudFetch() {
   try {
@@ -611,7 +633,9 @@ async function handleCheckoutSubmit(e) {
     });
     saveProducts(products);
 
-    saveOrder({ name, phone, comment, items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price })), total });
+    const orderData = { name, phone, comment, items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price })), total };
+    saveOrder(orderData);
+    saveOrderToGitHub({ ts: new Date().toISOString(), ...orderData });
     clearCart();
     updateCartBadge();
     document.getElementById('checkout-form-section').hidden = true;

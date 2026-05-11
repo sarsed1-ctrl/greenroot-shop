@@ -112,6 +112,18 @@
             </form>
           </div>
 
+          <!-- ---- GitHub Token (для синхронизации заказов) ---- -->
+          <div class="add-product-section" style="margin-top:2rem;">
+            <h2 class="add-product-title">GitHub Token для заказов</h2>
+            <p class="admin-hint">Вставь токен один раз — заказы будут сохраняться в репозиторий и отображаться в боте.</p>
+            <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+              <input type="password" id="gh-token-input" style="flex:1;min-width:200px;"
+                     placeholder="github_pat_..." />
+              <button id="gh-token-save" class="btn btn-primary">Сохранить</button>
+              <span id="gh-token-status" style="color:var(--text-muted);font-size:0.85rem;"></span>
+            </div>
+          </div>
+
           <!-- ---- Bot Management ---- -->
           <div class="bot-section">
 

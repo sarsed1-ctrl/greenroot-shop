@@ -39,6 +39,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  /* GitHub token save */
+  const ghInput  = document.getElementById('gh-token-input');
+  const ghStatus = document.getElementById('gh-token-status');
+  const saved    = localStorage.getItem('gr_gh_token');
+  if (saved) { ghInput.value = saved; ghStatus.textContent = '✓ Сохранён'; }
+
+  document.getElementById('gh-token-save').addEventListener('click', () => {
+    const val = ghInput.value.trim();
+    if (!val) { ghStatus.textContent = '✗ Введи токен'; return; }
+    localStorage.setItem('gr_gh_token', val);
+    ghStatus.textContent = '✓ Сохранён';
+  });
+
   document.getElementById('logout-btn').addEventListener('click', () => {
     sessionStorage.removeItem('gr_admin_auth');
     stopBotPolling();
