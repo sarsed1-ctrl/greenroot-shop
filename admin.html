@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- No search-engine indexing for the admin panel -->
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Admin — GreenRoot</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header">
+    <nav class="nav container" aria-label="Main navigation">
+      <a href="index.html" class="logo">🌿 GreenRoot</a>
+      <ul class="nav-links" role="list">
+        <li><a href="index.html"   class="nav-link">Home</a></li>
+        <li><a href="catalog.html" class="nav-link">Catalog</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- ===================== MAIN ===================== -->
+  <main>
+    <section class="section">
+      <div class="container">
+
+        <!-- ---- Password gate (visible by default) ---- -->
+        <div id="admin-gate" class="admin-gate">
+          <h1>Admin Login</h1>
+          <p>Enter the admin password to manage products.</p>
+          <form id="login-form" class="login-form" novalidate>
+            <label for="admin-password">Password</label>
+            <input
+              type="password"
+              id="admin-password"
+              name="password"
+              autocomplete="current-password"
+              required
+            />
+            <p id="login-error" class="form-error" role="alert"></p>
+            <button type="submit" class="btn btn-primary">Log In</button>
+          </form>
+        </div>
+
+        <!-- ---- Admin panel (hidden until correct password) ---- -->
+        <div id="admin-panel" class="admin-panel" hidden>
+
+          <div class="admin-panel-header">
+            <h1>Product Manager</h1>
+            <button id="logout-btn" class="btn btn-ghost btn-sm">Log out</button>
+          </div>
+          <p class="admin-hint">
+            Edit product names, short descriptions, and prices below.
+            Changes are stored in your browser's local storage and reflected
+            immediately on the catalog and product pages.
+          </p>
+
+          <!-- Product edit rows injected here by admin.js -->
+          <div id="admin-product-list" aria-live="polite"></div>
+
+          <div class="admin-actions">
+            <button id="save-all-btn" class="btn btn-primary btn-lg">Save All Changes</button>
+            <button id="reset-btn" class="btn btn-ghost">Reset to Defaults</button>
+            <p id="save-status" class="save-status" role="status" aria-live="polite"></p>
+          </div>
+
+          <!-- ---- Add New Product ---- -->
+          <div class="add-product-section">
+            <h2 class="add-product-title">Add New Product</h2>
+            <form id="add-product-form" novalidate>
+              <div class="add-product-fields">
+                <div class="add-row-inline">
+                  <div class="add-field-group add-field-emoji">
+                    <label for="np-emoji">Emoji</label>
+                    <input type="text" id="np-emoji" maxlength="4" placeholder="🌱" />
+                  </div>
+                  <div class="add-field-group add-field-name">
+                    <label for="np-name">Name <span class="form-required" aria-hidden="true">*</span></label>
+                    <input type="text" id="np-name" maxlength="80" required />
+                  </div>
+                </div>
+                <div class="add-field-group">
+                  <label for="np-shortdesc">Short Description</label>
+                  <textarea id="np-shortdesc" maxlength="200" rows="2"></textarea>
+                </div>
+                <div class="add-field-group">
+                  <label for="np-desc">Full Description</label>
+                  <textarea id="np-desc" maxlength="1000" rows="3"></textarea>
+                </div>
+                <div class="add-field-group">
+                  <label for="np-usage">Usage Tips</label>
+                  <textarea id="np-usage" maxlength="500" rows="2"></textarea>
+                </div>
+                <div class="add-row-inline">
+                  <div class="add-field-group add-field-price">
+                    <label for="np-price">Price <span class="form-required" aria-hidden="true">*</span></label>
+                    <input type="text" id="np-price" maxlength="20" placeholder="€0.00" required />
+                  </div>
+                  <div class="add-field-group add-field-stock">
+                    <label for="np-stock">
+                      Stock
+                      <span class="label-hint">(blank&nbsp;=&nbsp;∞)</span>
+                    </label>
+                    <input type="number" id="np-stock" min="0" placeholder="∞" />
+                  </div>
+                </div>
+              </div>
+              <p id="np-error" class="form-error" role="alert"></p>
+              <button type="submit" class="btn btn-primary">Add Product</button>
+            </form>
+          </div>
+
+          <!-- ---- Bot Management ---- -->
+          <div class="bot-section">
+
+            <div class="bot-section-header">
+              <div>
+                <h2 class="bot-section-title">Bot Management</h2>
+                <p class="admin-hint" style="margin-bottom:0;">
+                  Keep this tab open. Send commands to your bot from Telegram — they run here live.
+                </p>
+              </div>
+              <div class="bot-controls">
+                <span class="bot-status-dot bot-status-stopped" id="bot-status-dot"></span>
+                <span class="bot-status-text" id="bot-status-text">Stopped</span>
+                <button id="bot-toggle-btn" class="btn btn-outline btn-sm">Start</button>
+              </div>
+            </div>
+
+            <!-- Button reference -->
+            <div class="bot-commands-card">
+              <p class="bot-commands-title">Кнопки бота (Telegram-меню)</p>
+              <table class="bot-commands-table">
+                <tbody>
+                  <tr>
+                    <td><code>📦 Склад</code></td>
+                    <td>Остатки всех товаров</td>
+                  </tr>
+                  <tr>
+                    <td><code>🛒 Заказы</code></td>
+                    <td>Последние 10 заказов</td>
+                  </tr>
+                  <tr>
+                    <td><code>🗂 Все товары</code></td>
+                    <td>Список товаров с ID, ценами и остатками</td>
+                  </tr>
+                  <tr>
+                    <td><code>💰 Цены</code></td>
+                    <td>Прайс-лист</td>
+                  </tr>
+                  <tr>
+                    <td><code>✏️ Изменить склад</code></td>
+                    <td>Выбрать товар → ввести кол-во или нажать пресет (+1/+5/−5/0/∞)</td>
+                  </tr>
+                  <tr>
+                    <td><code>💲 Изменить цену</code></td>
+                    <td>Выбрать товар → ввести новую цену</td>
+                  </tr>
+                  <tr>
+                    <td><code>➕ Добавить товар</code></td>
+                    <td>Пошаговый мастер (4 шага, кнопки Пропустить / Отмена)</td>
+                  </tr>
+                  <tr>
+                    <td><code>🗑 Удалить товар</code></td>
+                    <td>Выбрать товар → подтвердить удаление кнопкой</td>
+                  </tr>
+                  <tr>
+                    <td><code>❓ Помощь</code></td>
+                    <td>Краткая справка по боту</td>
+                  </tr>
+                  <tr>
+                    <td><code>/setstock all 10</code></td>
+                    <td>Установить всем товарам 10 шт. (текстовая команда)</td>
+                  </tr>
+                  <tr>
+                    <td><code>/cancel</code></td>
+                    <td>Отменить активный мастер</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Live command log -->
+            <div class="bot-log" id="bot-log">
+              <p class="bot-log-empty">No commands received yet in this session.</p>
+            </div>
+
+          </div><!-- /bot-section -->
+
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© 2024 GreenRoot. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- main.js must load first — admin.js calls getProducts(), saveProducts(), escapeHtml() from it -->
+  <script src="main.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
